@@ -1,6 +1,7 @@
 all: lru_cache
 
-lru_cache: test_lru_cache test_concurrent_lru_cache
+lru_cache: test_lru_cache 
+#test_concurrent_lru_cache
 
 test_lru_cache: test_lru_cache.cpp lru_cache.h
 	$(CXX) test_lru_cache.cpp -o$@ -std=c++11
