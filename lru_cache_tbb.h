@@ -1,34 +1,32 @@
-#ifndef __LRU_CACHE_H__
-#define __LRU_CACHE_H__
+#ifndef __LRU_CACHE_TBB_H__
+#define __LRU_CACHE_TBB_H__
 
 #include <list>
-#include <unordered_map>
+#include <tbb/concurrent_hash_map.h>
 
 template<
 	typename Key,
 	typename Value,
-	// lets allow to change hasher and equal predicate
-	typename Hash = std::hash<Key>,
-	typename Pred = std::equal_to<Key>
+	// lets allow to change hash comparer
+	typename HashCompare = tbb::tbb_hash_compare<Key>
 >
-class lru_cache_t
+class lru_cache_tbb_t
 {
 public:
 	typedef Key key_type;
 	typedef Value value_type;
-	typedef Hash hasher_type;
-	typedef Pred predicate_type;
+	typedef HashCompare hash_compare_type;
 	typedef typename std::pair<key_type, value_type> pair_type;
 	typedef typename std::list<pair_type>::iterator iterator;
 	typedef typename std::list<pair_type>::const_iterator const_iterator;
 	//
-	lru_cache_t(size_t max_size): _max_size(max_size)
+	lru_cache_tbb_t(size_t max_size): _max_size(max_size)
 	{
 	}
 	void set(const key_type &key, const value_type &value)
 	{
-		auto it = _mapper.find(key);
-		if (it != _mapper.end())
+		typename mapper_type::const_accessor it;
+		if (_mapper.find(it, key))
 		{
 			auto lit = (*it).second;
 			// move to the head
@@ -46,40 +44,13 @@ public:
 			}
 			//
 			_elements.emplace_front(key, value);
-			auto lit = _elements.begin();
-			_mapper.insert(std::make_pair(key, lit));
-		}
-	}
-	value_type& operator[](const key_type &key)
-	{
-		auto it = _mapper.find(key);
-		if (it != _mapper.end())
-		{
-			auto lit = (*it).second;
-			// move to the head
-			_elements.splice(_elements.begin(), _elements, lit);
-			//
-			return (*lit).second;
-		}
-		else
-		{
-			if (_elements.size() >= _max_size)
-			{
-				auto pair = _elements.back();
-				_mapper.erase(pair.first);
-				_elements.pop_back();
-			}
-			//
-			_elements.emplace_front(key, value_type());
-			auto lit = _elements.begin();
-			_mapper.insert(std::make_pair(key, lit));
-			return (*lit).second;
+			_mapper.insert(std::make_pair(key, _elements.begin()));
 		}
 	}
 	bool get(const key_type &key, value_type &value)
 	{
-		auto it = _mapper.find(key);
-		if (it != _mapper.end())
+		typename mapper_type::const_accessor it;
+		if (_mapper.find(it, key))
 		{
 			auto lit = (*it).second;
 			// move to the head
@@ -91,8 +62,8 @@ public:
 	}
 	bool get(const key_type &key, value_type &value) const
 	{
-		auto it = _mapper.find(key);
-		if (it != _mapper.end())
+		typename mapper_type::const_accessor it;
+		if (_mapper.find(it, key))
 		{
 			auto lit = (*it).second;
 			value = (*lit).second;
@@ -102,8 +73,8 @@ public:
 	}
 	void erase(const key_type &key)
 	{
-		auto it = _mapper.find(key);
-		if (it != _mapper.end())
+		typename mapper_type::const_accessor it;
+		if (_mapper.find(it, key))
 		{
 			auto lit = (*it).second;
 			_elements.erase(lit);
@@ -143,7 +114,8 @@ public:
 private:
 	size_t _max_size;
 	std::list<pair_type> _elements;
-	std::unordered_map<key_type, iterator, hasher_type, predicate_type> _mapper;
+	typedef tbb::concurrent_hash_map<key_type, iterator, hash_compare_type> mapper_type;
+	tbb::concurrent_hash_map<key_type, iterator, hash_compare_type> _mapper;
 };
 
-#endif // __LRU_CACHE_H__
+#endif // __LRU_CACHE_TBB_H__
