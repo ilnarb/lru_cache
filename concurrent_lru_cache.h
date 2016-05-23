@@ -3,6 +3,7 @@
 
 #include <list>
 #include <tbb/concurrent_hash_map.h>
+#include <tbb/mutex.h>
 
 template<
 	typename Key,
@@ -25,6 +26,7 @@ public:
 	}
 	void set(const key_type &key, const value_type &value)
 	{
+		mutex_type::scoped_lock(_mutex);
 		typename mapper_type::const_accessor it;
 		if (_mapper.find(it, key))
 		{
@@ -52,6 +54,7 @@ public:
 		typename mapper_type::const_accessor it;
 		if (_mapper.find(it, key))
 		{
+			mutex_type::scoped_lock(_mutex);
 			auto lit = (*it).second;
 			// move to the head
 			_elements.splice(_elements.begin(), _elements, lit);
@@ -65,6 +68,7 @@ public:
 		typename mapper_type::const_accessor it;
 		if (_mapper.find(it, key))
 		{
+			mutex_type::scoped_lock(_mutex);
 			auto lit = (*it).second;
 			value = (*lit).second;
 			return true;
@@ -76,6 +80,7 @@ public:
 		typename mapper_type::const_accessor it;
 		if (_mapper.find(it, key))
 		{
+			mutex_type::scoped_lock(_mutex);
 			auto lit = (*it).second;
 			_elements.erase(lit);
 			_mapper.erase(it);
@@ -115,7 +120,9 @@ private:
 	size_t _max_size;
 	std::list<pair_type> _elements;
 	typedef tbb::concurrent_hash_map<key_type, iterator, hash_compare_type> mapper_type;
-	tbb::concurrent_hash_map<key_type, iterator, hash_compare_type> _mapper;
+	mapper_type _mapper;
+	typedef tbb::mutex mutex_type;
+	mutex_type _mutex;
 };
 
 #endif // __CONCURRENT_LRU_CACHE_H__
