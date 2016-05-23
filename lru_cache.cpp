@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "lru_cache.h"
-#include "lru_cache_tbb.h"
+#include "concurrent_lru_cache.h"
 
 int main(int argc, char* argv[])
 {
@@ -20,15 +20,15 @@ int main(int argc, char* argv[])
 	}
 	std::cout << std::endl;
 
-	lru_cache_tbb_t<int, int> cache_tbb(3);
+	concurrent_lru_cache_t<int, int> ccache(3);
 
 	for(int i = 0; i < 10; i++)
 	{
 		std::cout << "set(" << (i % 5) << ", " << i << ");" << std::endl;
-		cache_tbb.set((i % 5), i);
+		ccache.set((i % 5), i);
 	}
 
-	for(auto it = cache_tbb.begin(); it != cache_tbb.end(); ++it)
+	for(auto it = ccache.begin(); it != ccache.end(); ++it)
 	{
 		std::cout << "(" << (*it).first << ", " << (*it).second << ") ";
 	}

@@ -1,5 +1,5 @@
-#ifndef __LRU_CACHE_TBB_H__
-#define __LRU_CACHE_TBB_H__
+#ifndef __CONCURRENT_LRU_CACHE_H__
+#define __CONCURRENT_LRU_CACHE_H__
 
 #include <list>
 #include <tbb/concurrent_hash_map.h>
@@ -10,7 +10,7 @@ template<
 	// lets allow to change hash comparer
 	typename HashCompare = tbb::tbb_hash_compare<Key>
 >
-class lru_cache_tbb_t
+class concurrent_lru_cache_t
 {
 public:
 	typedef Key key_type;
@@ -20,7 +20,7 @@ public:
 	typedef typename std::list<pair_type>::iterator iterator;
 	typedef typename std::list<pair_type>::const_iterator const_iterator;
 	//
-	lru_cache_tbb_t(size_t max_size): _max_size(max_size)
+	concurrent_lru_cache_t(size_t max_size): _max_size(max_size)
 	{
 	}
 	void set(const key_type &key, const value_type &value)
@@ -118,4 +118,4 @@ private:
 	tbb::concurrent_hash_map<key_type, iterator, hash_compare_type> _mapper;
 };
 
-#endif // __LRU_CACHE_TBB_H__
+#endif // __CONCURRENT_LRU_CACHE_H__
