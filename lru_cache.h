@@ -40,7 +40,7 @@ public:
 		{
 			if (_elements.size() >= _max_size)
 			{
-				auto pair = _elements.back();
+				auto &pair = _elements.back();
 				_mapper.erase(pair.first);
 				_elements.pop_back();
 			}
@@ -65,7 +65,7 @@ public:
 		{
 			if (_elements.size() >= _max_size)
 			{
-				auto pair = _elements.back();
+				auto &pair = _elements.back();
 				_mapper.erase(pair.first);
 				_elements.pop_back();
 			}
