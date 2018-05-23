@@ -30,17 +30,17 @@ public:
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
+			const auto& lit = it->second;
 			// move to the head
 			_elements.splice(_elements.begin(), _elements, lit);
 			//
-			return (*lit).second;
+			return lit->second;
 		}
 		else
 		{
 			if (_elements.size() >= _max_size)
 			{
-				auto &pair = _elements.back();
+				const auto &pair = _elements.back();
 				_mapper.erase(pair.first);
 				_elements.pop_back();
 			}
@@ -48,7 +48,7 @@ public:
 			_elements.emplace_front(key, value_type());
 			auto lit = _elements.begin();
 			_mapper.emplace(key, lit);
-			return (*lit).second;
+			return lit->second;
 		}
 	}
 	void set(const key_type &key, const value_type &value)
@@ -60,10 +60,10 @@ public:
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
+			const auto& lit = it->second;
 			// move to the head
 			_elements.splice(_elements.begin(), _elements, lit);
-			value = (*lit).second;
+			value = lit->second;
 			return true;
 		}
 		return false;
@@ -73,8 +73,8 @@ public:
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
-			value = (*lit).second;
+			const auto& lit = it->second;
+			value = lit->second;
 			return true;
 		}
 		return false;
@@ -84,8 +84,8 @@ public:
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
-			return (*lit).second;
+			const auto& lit = it->second;
+			return lit->second;
 		}
 		return dummy;
 	}
@@ -99,7 +99,7 @@ public:
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
+			const auto& lit = it->second;
 			_elements.erase(lit);
 			_mapper.erase(it);
 			return true;
@@ -123,7 +123,7 @@ public:
 	{
 		return _elements.end();
 	}
-	// 
+	//
 	size_t size() const
 	{
 		return _elements.size();
@@ -132,9 +132,14 @@ public:
 	{
 		return _max_size;
 	}
-	size_t empty() const
+	bool empty() const
 	{
 		return _elements.empty();
+	}
+	void clear()
+	{
+		_elements.clear();
+		_mapper.clear();
 	}
 private:
 	size_t _max_size;

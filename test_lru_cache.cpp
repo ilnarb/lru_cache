@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 	for(int i = 0; i < 10; i++)
 	{
 		std::cout << "set(" << (i % 5) << ", " << i << ");" << std::endl;
-//		cache.set((i % 5), i);
+		cache.set((i % 5), i);
 		cache[(i % 5)] = i;
 	}
 
