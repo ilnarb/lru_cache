@@ -25,66 +25,45 @@ public:
 	lru_cache_t(size_t max_size): _max_size(max_size)
 	{
 	}
-	void set(const key_type &key, const value_type &value)
-	{
-		auto it = _mapper.find(key);
-		if (it != _mapper.end())
-		{
-			auto lit = (*it).second;
-			// move to the head
-			_elements.splice(_elements.begin(), _elements, lit);
-			// set new value
-			(*lit).second = value;
-		}
-		else
-		{
-			if (_elements.size() >= _max_size)
-			{
-				auto pair = _elements.back();
-				_mapper.erase(pair.first);
-				_elements.pop_back();
-			}
-			//
-			_elements.emplace_front(key, value);
-			auto lit = _elements.begin();
-			_mapper.insert(std::make_pair(key, lit));
-		}
-	}
 	value_type& operator[](const key_type &key)
 	{
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
+			const auto& lit = it->second;
 			// move to the head
 			_elements.splice(_elements.begin(), _elements, lit);
 			//
-			return (*lit).second;
+			return lit->second;
 		}
 		else
 		{
 			if (_elements.size() >= _max_size)
 			{
-				auto pair = _elements.back();
+				const auto &pair = _elements.back();
 				_mapper.erase(pair.first);
 				_elements.pop_back();
 			}
 			//
 			_elements.emplace_front(key, value_type());
 			auto lit = _elements.begin();
-			_mapper.insert(std::make_pair(key, lit));
-			return (*lit).second;
+			_mapper.emplace(key, lit);
+			return lit->second;
 		}
+	}
+	void set(const key_type &key, const value_type &value)
+	{
+		(*this)[key] = value;
 	}
 	bool get(const key_type &key, value_type &value)
 	{
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
+			const auto& lit = it->second;
 			// move to the head
 			_elements.splice(_elements.begin(), _elements, lit);
-			value = (*lit).second;
+			value = lit->second;
 			return true;
 		}
 		return false;
@@ -94,21 +73,38 @@ public:
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
-			value = (*lit).second;
+			const auto& lit = it->second;
+			value = lit->second;
 			return true;
 		}
 		return false;
 	}
-	void erase(const key_type &key)
+	const value_type& operator[](const key_type &key) const
 	{
 		auto it = _mapper.find(key);
 		if (it != _mapper.end())
 		{
-			auto lit = (*it).second;
+			const auto& lit = it->second;
+			return lit->second;
+		}
+		return dummy;
+	}
+	bool exists(const key_type &key) const
+	{
+		auto it = _mapper.find(key);
+		return (it != _mapper.end());
+	}
+	bool erase(const key_type &key)
+	{
+		auto it = _mapper.find(key);
+		if (it != _mapper.end())
+		{
+			const auto& lit = it->second;
 			_elements.erase(lit);
 			_mapper.erase(it);
+			return true;
 		}
+		return false;
 	}
 	// iterators
 	iterator begin()
@@ -127,7 +123,7 @@ public:
 	{
 		return _elements.end();
 	}
-	// 
+	//
 	size_t size() const
 	{
 		return _elements.size();
@@ -136,14 +132,20 @@ public:
 	{
 		return _max_size;
 	}
-	size_t empty() const
+	bool empty() const
 	{
 		return _elements.empty();
+	}
+	void clear()
+	{
+		_elements.clear();
+		_mapper.clear();
 	}
 private:
 	size_t _max_size;
 	std::list<pair_type> _elements;
 	std::unordered_map<key_type, iterator, hasher_type, predicate_type> _mapper;
+	value_type dummy;
 };
 
 #endif // __LRU_CACHE_H__
