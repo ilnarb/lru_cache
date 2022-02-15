@@ -38,16 +38,18 @@ public:
 		}
 		else
 		{
-			if (_elements.size() >= _max_size)
+			if (_size >= _max_size)
 			{
 				const auto &pair = _elements.back();
 				_mapper.erase(pair.first);
 				_elements.pop_back();
+				_size--;
 			}
 			//
 			_elements.emplace_front(key, value_type());
 			auto lit = _elements.begin();
 			_mapper.emplace(key, lit);
+			_size++;
 			return lit->second;
 		}
 	}
@@ -102,6 +104,7 @@ public:
 			const auto& lit = it->second;
 			_elements.erase(lit);
 			_mapper.erase(it);
+			_size--;
 			return true;
 		}
 		return false;
@@ -126,7 +129,7 @@ public:
 	//
 	size_t size() const
 	{
-		return _elements.size();
+		return _size;
 	}
 	size_t max_size() const
 	{
@@ -140,9 +143,10 @@ public:
 	{
 		_elements.clear();
 		_mapper.clear();
+		_size = 0;
 	}
 private:
-	size_t _max_size;
+	size_t _size = 0, _max_size;
 	std::list<pair_type> _elements;
 	std::unordered_map<key_type, iterator, hasher_type, predicate_type> _mapper;
 	value_type dummy;
